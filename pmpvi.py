@@ -1,96 +1,112 @@
 # Inline comment key: [G] = "generated with AI" (not manually written by a human)
 import re #[G]
 
-# --- 1. Basic Math Functions (Placeholders) ---#[G]
+# --- Global Storage --- #[G]
+variables = {"ans": None} #[G]
+
+# --- 1. Basic Math Functions --- #[G]
 def add(a, b): #[G]
     return a + b #[G]
 
-def subtract(a, b):#[G]
+def subtract(a, b): #[G]
     return a - b #[G]
 
-# --- 2. Helper: Evaluates logic inside a single set of parens ---#[G]
+# --- 2. Sign Formatter --- #[G]
+def format_signs(expression): #[G]
+    while "--" in expression: #[G]
+        expression = expression.replace("--", "+") #[G]
+    return expression #[G]
+
+# --- 3. Evaluator (Fixed) --- #[G]
 def evaluate_flat_expression(expression): #[G]
-    """
-    Parses a string without parentheses (e.g., "5 - 20" or "5 - 2 - 1") #[G]
-    and calculates the result left-to-right. #[G]
-    """
-    # Remove all whitespace for easier parsing #[G]
-    expression = expression.replace(" ", "") #[G]
+    # Strip spaces/newlines #[G]
+    expression = expression.replace(" ", "").replace("\n", "") #[G]
+    expression = format_signs(expression) #[G]
     
-    # This regex finds all numbers (including negatives) and operators separately#[G]
-    # Pattern explanation: #[G]
-    # (?<!\d)-?\d+  : Matches a number (potentially negative) ensuring it's not a subtraction operator following a digit #[G]
-    # [+-]          : Matches operators #[G]
-    # This is a basic tokenizer for integers #[G]
-    tokens = re.findall(r'(?<!\d)-?\d+|[+-]', expression) #[G]
+    tokens = re.findall(r'[a-z]+|(?<!\d)-?\d+|[+-]', expression) #[G]
     
     if not tokens: #[G]
         return 0 #[G]
-        
-    # Start with the first number #[G]
-    current_value = int(tokens[0]) #[G]
     
-    # Iterate through the rest of the tokens in pairs (operator, number) #[G]
+    def resolve(token): #[G]
+        if token in variables: #[G]
+            val = variables[token]  #[G]
+            if val is None: #[G]
+                raise ValueError(f"Variable '{token}' has not been assigned a value yet.") #[G]
+            return val #[G]
+        return int(token) #[G]
+
+    current_value = resolve(tokens[0]) #[G]
+    
     i = 1 #[G]
-    while i < len(tokens): #[G]
+    # SAFE LOOP: Ensures we don't go out of bounds [G]
+    while i + 1 < len(tokens): #[G]
         operator = tokens[i] #[G]
-        next_number = int(tokens[i+1]) #[G]
+        next_token = tokens[i+1] #[G]
+        next_val = resolve(next_token) #[G]
         
         if operator == '+': #[G]
-            current_value = add(current_value, next_number) #[G]
+            current_value = add(current_value, next_val) #[G]
         elif operator == '-': #[G]
-            current_value = subtract(current_value, next_number) #[G]
-            
-        i += 2 # Move to the next operator #[G]
+            current_value = subtract(current_value, next_val) #[G]
+        i += 2 #[G]
         
     return current_value #[G]
 
-# --- 3. Main Recursive Function --- #[G]
+# --- 4. Main Recursive Function --- #[G]
 def recursive_parentheses_solver(expression): #[G]
-    """
-    Recursively finds the innermost, leftmost parentheses, evaluates them, #[G]
-    and replaces them in the string until no parentheses remain. #[G]
-    """
-    # Base Case: If there are no closing parentheses, we are done with recursion. #[G]
-    # We allow the function to return the final simplified string. #[G]
     if ')' not in expression: #[G]
-        # Optional: Evaluate the final string if it's just a math expression #[G]
-        # return evaluate_flat_expression(expression) #[G]
-        return expression.strip() #[G]
+        return evaluate_flat_expression(expression) #[G]
 
-    # Step 1: Find the FIRST closing parenthesis ')' #[G]
-    # This ensures we are finding the termination of the leftmost set. #[G]
     close_index = expression.find(')') #[G]
-    
-    # Step 2: Find the LAST open parenthesis '(' BEFORE the closing index. #[G]
-    # This ensures we have found the "innermost" pair. #[G]
-    # We slice the string up to close_index to search backwards. #[G]
     open_index = expression.rfind('(', 0, close_index) #[G]
     
-    # Step 3: Extract the content inside these parentheses #[G]
     inner_content = expression[open_index + 1 : close_index] #[G]
-    
-    # Step 4: Evaluate the content #[G]
-    # (e.g., turns "5 - 20" into -15) #[G]
     result = evaluate_flat_expression(inner_content) #[G]
     
-    # Step 5: Reconstruct the string #[G]
-    # Replace (inner_content) with the calculated result #[G]
-    # We rely on str() to convert the integer result back to text #[G]
     new_expression = ( #[G]
-        expression[:open_index] + #[G]
+        expression[:open_index] +  #[G]
         str(result) + #[G]
-        expression[close_index + 1:]#[G]
-    )
+        expression[close_index + 1:] #[G]
+    ) #[G]
     
-    print(f"Found: ({inner_content}) -> Evaluated to: {result} -> New Expression: {new_expression}") #[G]
-
-    # Step 6: Recursive Call #[G]
     return recursive_parentheses_solver(new_expression) #[G]
 
-# --- Usage Example --- #[G]
-expression_string = "ans = (17 - (5 - 20)) - (1 - 11)" #[G]
+# --- 5. Main Logic Controller --- #[G]
+def process_input_line(input_string): #[G]
+    # 1. SPECIAL LOGIC FOR "ans" #[G]
+    i = 0 #[G]
+    while i < len(input_string): #[G]
+        char = input_string[i] #[G]
+        if char.isalpha(): #[G]
+            if char == 'a': #[G]
+                if (i + 3 < len(input_string)) and (input_string[i+1:i+4] == "ns "): #[G]
+                    next_char = input_string[i+4] #[G]
+                    if next_char == '=': #[G]
+                        expression = input_string[i+5:] #[G]
+                        result = recursive_parentheses_solver(expression) #[G]
+                        variables['ans'] = result #[G]
+                        return f"Variable 'ans' updated to: {result}" #[G]
+                    elif next_char == '\n' or next_char == ' ': #[G]
+                        return f"Current value of ans: {variables['ans']}" #[G]
+            break #[G]
+        i += 1 #[G]
 
-print(f"Original: {expression_string}\n") #[G]
-final_result = recursive_parentheses_solver(expression_string) #[G]
-print(f"\nFinal Result: {final_result}") #[G]
+    # 2. GENERIC ASSIGNMENT LOGIC #[G]
+    if '=' in input_string: #[G]
+        parts = input_string.split('=', 1) #[G]
+        var_name = parts[0].strip() #[G]
+        expression = parts[1].strip() #[G]
+        
+        if var_name.isalpha(): #[G]
+            result = recursive_parentheses_solver(expression)#[G]
+            variables[var_name] = result #[G]
+            return f"Variable '{var_name}' updated to: {result}" #[G]
+
+    # 3. STANDARD EXPRESSION EVALUATION #[G]
+    result = recursive_parentheses_solver(input_string) #[G]
+    return f"Result: {result}" #[G]
+
+
+# --- Usage Test --- #[G]
+print(process_input_line("a = 3 + 5 - -2 - 2")) #[G]
