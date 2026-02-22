@@ -1,6 +1,6 @@
 # Inline comment key: [G] = "generated with AI" (not manually written by a human)
 import re #[G]
-
+import sys #[G]
 # --- Global Storage --- #[G]
 variables = {"ans": None} #[G]
 
@@ -111,3 +111,18 @@ def process_input_line(input_string): #[G]
     # 3. STANDARD EXPRESSION #[G]
     result = recursive_parentheses_solver(input_string) #[G]
     return str(result) #[G]
+
+if __name__ == "__main__": #[G]
+    # sys.stdin automatically reads input line by line #[G]
+    # It stops when it reaches EOF (End of File) or you press Ctrl+Z/Ctrl+D #[G]
+    for line in sys.stdin: #[G]
+        output = process_input_line(line) #[G]
+        #[G]
+        # 1. Check if the line was only whitespace #[G]
+        if not line.strip(): #[G]
+            print() # Output a blank line per your table's rules #[G]
+            #[G]
+        # 2. For everything else, only print if output is not empty #[G]
+        # (This ensures assignments like x = 5 remain completely silent) #[G]
+        elif output != "": #[G]
+            print(output) #[G]
