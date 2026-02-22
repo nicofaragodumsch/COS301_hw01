@@ -17,40 +17,41 @@ def format_signs(expression): #[G]
         expression = expression.replace("--", "+") #[G]
     return expression #[G]
 
-# --- 3. Evaluator (Fixed) --- #[G]
+# --- 3. Evaluator (Fixed & Variable Aware) --- #[G]
 def evaluate_flat_expression(expression): #[G]
     # Strip spaces/newlines #[G]
     expression = expression.replace(" ", "").replace("\n", "") #[G]
     expression = format_signs(expression) #[G]
-    
+    #[G]
+    # Regex to find variables, numbers, or operators #[G]
     tokens = re.findall(r'[a-z]+|(?<!\d)-?\d+|[+-]', expression) #[G]
-    
+
     if not tokens: #[G]
         return 0 #[G]
-    
+
     def resolve(token): #[G]
         if token in variables: #[G]
-            val = variables[token]  #[G]
+            val = variables[token] #[G]
             if val is None: #[G]
                 raise ValueError(f"Variable '{token}' has not been assigned a value yet.") #[G]
             return val #[G]
         return int(token) #[G]
 
     current_value = resolve(tokens[0]) #[G]
-    
+
     i = 1 #[G]
-    # SAFE LOOP: Ensures we don't go out of bounds [G]
+    # SAFE LOOP: Ensures we don't go out of bounds #[G]
     while i + 1 < len(tokens): #[G]
         operator = tokens[i] #[G]
         next_token = tokens[i+1] #[G]
         next_val = resolve(next_token) #[G]
-        
+
         if operator == '+': #[G]
             current_value = add(current_value, next_val) #[G]
         elif operator == '-': #[G]
             current_value = subtract(current_value, next_val) #[G]
         i += 2 #[G]
-        
+
     return current_value #[G]
 
 # --- 4. Main Recursive Function --- #[G]
@@ -60,20 +61,24 @@ def recursive_parentheses_solver(expression): #[G]
 
     close_index = expression.find(')') #[G]
     open_index = expression.rfind('(', 0, close_index) #[G]
-    
+
     inner_content = expression[open_index + 1 : close_index] #[G]
     result = evaluate_flat_expression(inner_content) #[G]
-    
+
     new_expression = ( #[G]
-        expression[:open_index] +  #[G]
+        expression[:open_index] + #[G]
         str(result) + #[G]
         expression[close_index + 1:] #[G]
     ) #[G]
-    
+
     return recursive_parentheses_solver(new_expression) #[G]
 
-# --- 5. Main Logic Controller --- #[G]
+# --- 5. Main Logic Controller (Strict Output Formatting) --- #[G]
 def process_input_line(input_string): #[G]
+    # 0. Handle whitespace-only lines (returns blank) #[G]
+    if not input_string.strip(): #[G]
+        return "" #[G]
+
     # 1. SPECIAL LOGIC FOR "ans" #[G]
     i = 0 #[G]
     while i < len(input_string): #[G]
@@ -81,14 +86,15 @@ def process_input_line(input_string): #[G]
         if char.isalpha(): #[G]
             if char == 'a': #[G]
                 if (i + 3 < len(input_string)) and (input_string[i+1:i+4] == "ns "): #[G]
-                    next_char = input_string[i+4] #[G]
-                    if next_char == '=': #[G]
-                        expression = input_string[i+5:] #[G]
-                        result = recursive_parentheses_solver(expression) #[G]
-                        variables['ans'] = result #[G]
-                        return f"Variable 'ans' updated to: {result}" #[G]
-                    elif next_char == '\n' or next_char == ' ': #[G]
-                        return f"Current value of ans: {variables['ans']}" #[G]
+                    # Ensure we don't go out of bounds looking for the next char #[G]
+                    if i + 4 < len(input_string): #[G]
+                        next_char = input_string[i+4] #[G]
+                        if next_char == '=': #[G]
+                            expression = input_string[i+5:] #[G]
+                            variables['ans'] = recursive_parentheses_solver(expression) #[G]
+                            return "" #[G]
+                        elif next_char == '\n': #[G]
+                            return str(variables['ans']) #[G]
             break #[G]
         i += 1 #[G]
 
@@ -97,16 +103,11 @@ def process_input_line(input_string): #[G]
         parts = input_string.split('=', 1) #[G]
         var_name = parts[0].strip() #[G]
         expression = parts[1].strip() #[G]
-        
+        #[G]
         if var_name.isalpha(): #[G]
-            result = recursive_parentheses_solver(expression)#[G]
-            variables[var_name] = result #[G]
-            return f"Variable '{var_name}' updated to: {result}" #[G]
+            variables[var_name] = recursive_parentheses_solver(expression) #[G]
+            return "" #[G]
 
-    # 3. STANDARD EXPRESSION EVALUATION #[G]
+    # 3. STANDARD EXPRESSION #[G]
     result = recursive_parentheses_solver(input_string) #[G]
-    return f"Result: {result}" #[G]
-
-
-# --- Usage Test --- #[G]
-print(process_input_line("a = 3 + 5 - -2 - 2")) #[G]
+    return str(result) #[G]
