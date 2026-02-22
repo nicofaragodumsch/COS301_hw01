@@ -1,3 +1,4 @@
+#!/usr/bin/env python3 #[G]
 # Inline comment key: [G] = "generated with AI" (not manually written by a human)
 import re #[G]
 import sys #[G]
