@@ -1,4 +1,6 @@
 #!/usr/bin/env python3 #[G]
+#The above line is a shebang because I wrote this on Windows directly instead of troubleshooting my WSL setup
+#This file is Nico Farago Dumsch's COS301 Homework 1 submission
 # Inline comment key: [G] = "generated with AI" (not manually written by a human)
 import re #[G]
 import sys #[G]
@@ -13,17 +15,19 @@ def subtract(a, b): #[G]
     return a - b #[G]
 
 # --- 2. Sign Formatter --- #[G]
+#This makes sure that any "--" is correctly interpreted as a "+"
 def format_signs(expression): #[G]
     while "--" in expression: #[G]
         expression = expression.replace("--", "+") #[G]
     return expression #[G]
 
 # --- 3. Evaluator (Fixed & Variable Aware) --- #[G]
+#"Variable aware" means that the regex pattern accounts for the fact that a minus sign could be preceded by a letter
 def evaluate_flat_expression(expression): #[G]
     # Strip spaces/newlines #[G]
     expression = expression.replace(" ", "").replace("\n", "") #[G]
     expression = format_signs(expression) #[G]
-    #[G]
+
     # Regex to find variables, numbers, or operators #[G]
     # FIXED: Negative lookbehind now checks for both digits AND letters #[G]
     tokens = re.findall(r'[a-z]+|(?<![a-z0-9])-?\d+|[+-]', expression) #[G]
@@ -31,6 +35,7 @@ def evaluate_flat_expression(expression): #[G]
     if not tokens: #[G]
         return 0 #[G]
 
+    #resolve function stores value of variable in global variable list
     def resolve(token): #[G]
         if token in variables: #[G]
             val = variables[token] #[G]
@@ -43,6 +48,7 @@ def evaluate_flat_expression(expression): #[G]
 
     i = 1 #[G]
     # SAFE LOOP: Ensures we don't go out of bounds #[G]
+    #Previously, the loop was going out of bounds any time the token list had an even number of elements
     while i + 1 < len(tokens): #[G]
         operator = tokens[i] #[G]
         next_token = tokens[i+1] #[G]
@@ -57,6 +63,7 @@ def evaluate_flat_expression(expression): #[G]
     return current_value #[G]
 
 # --- 4. Main Recursive Function --- #[G]
+#The intention of this function is for it to ensure that the innermost set of parenthises is always evaluated first
 def recursive_parentheses_solver(expression): #[G]
     if ')' not in expression: #[G]
         return evaluate_flat_expression(expression) #[G]
@@ -82,6 +89,7 @@ def process_input_line(input_string): #[G]
         return "" #[G]
 
     # 1. SPECIAL LOGIC FOR "ans" #[G]
+    #It's important that "ans" is treated as a variable that has been created automatically
     i = 0 #[G]
     while i < len(input_string): #[G]
         char = input_string[i] #[G]
@@ -116,14 +124,14 @@ def process_input_line(input_string): #[G]
 
 if __name__ == "__main__": #[G]
     # sys.stdin automatically reads input line by line #[G]
-    # It stops when it reaches EOF (End of File) or you press Ctrl+Z/Ctrl+D #[G]
+    # It stops when it reaches end of standard input
     for line in sys.stdin: #[G]
         output = process_input_line(line) #[G]
-        #[G]
+   
         # 1. Check if the line was only whitespace #[G]
         if not line.strip(): #[G]
             print() # Output a blank line per your table's rules #[G]
-            #[G]
+   
         # 2. For everything else, only print if output is not empty #[G]
         # (This ensures assignments like x = 5 remain completely silent) #[G]
         elif output != "": #[G]
